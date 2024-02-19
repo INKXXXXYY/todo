@@ -9,6 +9,8 @@
       </li>
     </ul>
   </div>
+  <div v-if="error" class="error-message">{{ error }}</div>
+
 </template>
 
 <script>
@@ -20,28 +22,39 @@ export default {
     return {
       tasks: [],
       newTask: '',
+      error: null, // Add an error property to handle errors
     };
   },
   methods: {
-    fetchTasks() {
-      axios.get('http://localhost:3003/api/tasks')
-        .then(response => {
-          this.tasks = response.data;
-        });
+    // Use async/await for asynchronous operations
+    async fetchTasks() {
+      try {
+        const response = await axios.get('http://localhost:3003/api/tasks');
+        this.tasks = response.data;
+      } catch (error) {
+        console.error("There was an error fetching the tasks:", error);
+        this.error = "Failed to fetch tasks."; // Update UI or state to reflect the error
+      }
     },
-    addTask() {
+    async addTask() {
       if (!this.newTask) return;
-      axios.post('http://localhost:3003/api/tasks', { text: this.newTask })
-        .then(response => {
-          this.tasks.push(response.data);
-          this.newTask = ''; // 清空输入框
-        });
+      try {
+        const response = await axios.post('http://localhost:3003/api/tasks', { text: this.newTask });
+        this.tasks.push(response.data);
+        this.newTask = ''; // Clear input box
+      } catch (error) {
+        console.error("There was an error adding the task:", error);
+        this.error = "Failed to add task."; // Update UI or state to reflect the error
+      }
     },
-    deleteTask(id) {
-      axios.delete(`http://localhost:3003/api/tasks/${id}`)
-        .then(() => {
-          this.tasks = this.tasks.filter(task => task.id !== id);
-        });
+    async deleteTask(id) {
+      try {
+        await axios.delete(`http://localhost:3003/api/tasks/${id}`);
+        this.tasks = this.tasks.filter(task => task.id !== id);
+      } catch (error) {
+        console.error("There was an error deleting the task:", error);
+        this.error = "Failed to delete task."; // Update UI or state to reflect the error
+      }
     }
   },
   mounted() {
@@ -49,6 +62,7 @@ export default {
   }
 };
 </script>
+
 
 <style>
 /* 基本重置，确保样式在不同浏览器中的一致性 */
@@ -130,4 +144,10 @@ button:hover {
 button:focus {
   outline: none;
 }
+.error-message {
+  color: red;
+  margin: 10px 0;
+  text-align: center;
+}
+
 </style>
